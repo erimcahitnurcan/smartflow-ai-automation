@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 using SmartFlow.Api.Contracts;
 using SmartFlow.Api.Data;
 using SmartFlow.Api.Models;
@@ -23,7 +24,11 @@ public static class SupportRequestEndpoints
         return app;
     }
 
-    private static IResult Create(CreateSupportRequestDto dto, InMemorySupportRequestStore store, TimeProvider time)
+    private static async Task<IResult> Create(
+        CreateSupportRequestDto dto,
+        SmartFlowDbContext db,
+        TimeProvider time,
+        CancellationToken cancellationToken)
     {
         var errors = Validate(dto);
         if (errors is not null)
@@ -45,21 +50,25 @@ public static class SupportRequestEndpoints
             CreatedAtUtc = time.GetUtcNow().UtcDateTime
         };
 
-        store.Add(request);
+        db.SupportRequests.Add(request);
+        await db.SaveChangesAsync(cancellationToken);
 
         return TypedResults.Created($"/api/requests/{request.Id}", ToResponse(request));
     }
 
-    private static IResult GetById(Guid id, InMemorySupportRequestStore store)
+    private static async Task<IResult> GetById(Guid id, SmartFlowDbContext db, CancellationToken cancellationToken)
     {
-        var request = store.Find(id);
+        var request = await db.SupportRequests.AsNoTracking()
+            .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
+
         return request is null ? TypedResults.NotFound() : TypedResults.Ok(ToResponse(request));
     }
 
-    private static IResult List(
-        InMemorySupportRequestStore store,
+    private static async Task<IResult> List(
+        SmartFlowDbContext db,
         RequestCategory? category,
         RequestPriority? priority,
+        CancellationToken cancellationToken,
         int page = 1,
         int pageSize = DefaultPageSize)
     {
@@ -71,7 +80,7 @@ public static class SupportRequestEndpoints
             });
         }
 
-        var query = store.All();
+        var query = db.SupportRequests.AsNoTracking();
         if (category is not null)
         {
             query = query.Where(r => r.Category == category);
@@ -81,14 +90,16 @@ public static class SupportRequestEndpoints
             query = query.Where(r => r.Priority == priority);
         }
 
-        var filtered = query.OrderByDescending(r => r.CreatedAtUtc).ToList();
-        var items = filtered
+        // Filtering, counting, sorting and paging all run as SQL in the database.
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query
+            .OrderByDescending(r => r.CreatedAtUtc)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(ToResponse)
-            .ToList();
+            .ToListAsync(cancellationToken);
 
-        return TypedResults.Ok(new PagedResponse<SupportRequestResponse>(items, page, pageSize, filtered.Count));
+        return TypedResults.Ok(new PagedResponse<SupportRequestResponse>(
+            items.Select(ToResponse).ToList(), page, pageSize, totalCount));
     }
 
     private static SupportRequestResponse ToResponse(SupportRequest r) => new(
