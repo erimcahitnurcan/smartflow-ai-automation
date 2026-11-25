@@ -1,0 +1,118 @@
+{
+  "id": "oo4OqF9yIQpz7SXQ",
+  "name": "SmartFlow - Classify support request",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "support-request",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d825adc2-56db-4316-9ea5-6941b9a6a31f",
+      "name": "Webhook",
+      "webhookId": "b4844194-7f73-4404-84e1-cbc07c95f56b"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Placeholder classification for Phase 4.\n// Phase 5 replaces this node with a real LLM call (Ollama / Claude).\nconst body = $input.first().json.body ?? {};\nconst text = String(body.text ?? '').trim();\n\nreturn [{\n  json: {\n    originalText: text,\n    senderEmail: body.senderEmail ?? null,\n    category: 'General',\n    priority: 'Low',\n    summary: text.slice(0, 300),\n    suggestedAction: 'Placeholder: review manually until the LLM step is added (Phase 5).',\n    modelName: 'placeholder'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "e3295702-e21d-4505-b1ae-fa0c7dc464b1",
+      "name": "Placeholder classification"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://api:8080/api/requests",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        448,
+        0
+      ],
+      "id": "7e068fa8-07ca-40d4-8285-9a2f4345198d",
+      "name": "Save to SmartFlow API",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "54IGpnqO67SseJ6C",
+          "name": "SmartFlow API key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseCode": 201
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        672,
+        0
+      ],
+      "id": "54c00005-18ae-4353-aebf-6f373989845b",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Placeholder classification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Placeholder classification": {
+      "main": [
+        [
+          {
+            "node": "Save to SmartFlow API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save to SmartFlow API": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "pinData": {}
+}
