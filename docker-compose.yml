@@ -1,0 +1,19 @@
+# SmartFlow local stack.
+# Secrets are read from the ".env" file next to this file (copy it from ".env.example").
+
+services:
+  api:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      # SQLite file inside the mounted volume, so data survives container rebuilds.
+      ConnectionStrings__SmartFlow: "Data Source=/app/data/smartflow.db"
+      # Fails fast with a clear message if the key is missing from .env.
+      SmartFlow__ApiKey: ${SMARTFLOW_API_KEY:?Set SMARTFLOW_API_KEY in the .env file}
+    volumes:
+      - api_data:/app/data
+    restart: unless-stopped
+
+volumes:
+  api_data:
