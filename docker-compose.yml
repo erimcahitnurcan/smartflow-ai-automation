@@ -15,5 +15,26 @@ services:
       - api_data:/app/data
     restart: unless-stopped
 
+  n8n:
+    # Pinned version: "latest" could change behaviour without notice.
+    image: docker.n8n.io/n8nio/n8n:2.49.6
+    ports:
+      - "5678:5678"
+    environment:
+      # Encrypts credentials (such as the SmartFlow API key) stored by n8n.
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY:?Set N8N_ENCRYPTION_KEY in the .env file}
+      GENERIC_TIMEZONE: Europe/Berlin
+      TZ: Europe/Berlin
+      # Do not send anonymous usage data to n8n.
+      N8N_DIAGNOSTICS_ENABLED: "false"
+      N8N_PERSONALIZATION_ENABLED: "false"
+    volumes:
+      # Workflows, credentials and the n8n user account live here.
+      - n8n_data:/home/node/.n8n
+    depends_on:
+      - api
+    restart: unless-stopped
+
 volumes:
   api_data:
+  n8n_data:
