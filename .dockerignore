@@ -1,0 +1,15 @@
+# Keep the Docker build context small and free of secrets.
+**/bin/
+**/obj/
+**/*.db
+**/*.db-shm
+**/*.db-wal
+.git/
+.vs/
+.vscode/
+.idea/
+.env
+.env.*
+n8n_data/
+tests/
+docs/
