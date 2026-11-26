@@ -5,7 +5,11 @@ They contain no secrets: credentials are referenced by name only.
 
 | File | Purpose |
 |---|---|
-| `workflows/smartflow-classify-support-request.json` | `POST /webhook/support-request` → classify → save via SmartFlow API → respond with the stored record |
+| `workflows/smartflow-classify-support-request.json` | `POST /webhook/support-request` → build LLM request → classify with Ollama (`llama3.2:3b`, JSON schema output) → parse → save via SmartFlow API → respond with the stored record |
+
+The system prompt and JSON schema inside the **Build LLM request** node are copies of
+[`prompts/`](../prompts). Keep them identical; the evaluation in [`eval/`](../eval) measured exactly that prompt.
+The model must be downloaded once: `docker compose exec ollama ollama pull llama3.2:3b`.
 
 ## Webhook contract
 

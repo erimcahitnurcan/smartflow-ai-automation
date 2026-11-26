@@ -35,6 +35,21 @@ services:
       - api
     restart: unless-stopped
 
+  ollama:
+    # Local LLM server. Pinned version for reproducible results.
+    image: ollama/ollama:0.40.18
+    ports:
+      # Exposed to the host for the evaluation script (eval/Invoke-ClassificationEval.ps1).
+      - "11434:11434"
+    environment:
+      # Keep the model in memory for 30 minutes after the last request to avoid reload delays.
+      OLLAMA_KEEP_ALIVE: "30m"
+    volumes:
+      # Downloaded models (several GB) survive container rebuilds.
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+
 volumes:
   api_data:
   n8n_data:
+  ollama_data:

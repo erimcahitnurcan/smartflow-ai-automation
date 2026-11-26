@@ -14,6 +14,7 @@ ASP.NET Core (.NET 10, C#) · EF Core · SQLite · n8n · Docker Compose · Olla
 ## Documentation
 - [Architecture](docs/architecture.md)
 - [n8n workflows](n8n/README.md)
+- [Model evaluation](eval/README.md)
 
 ## Roadmap
 - [x] Phase 1 – Planning

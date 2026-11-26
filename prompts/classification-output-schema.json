@@ -1,0 +1,11 @@
+{
+  "type": "object",
+  "properties": {
+    "category": { "type": "string", "enum": ["Billing", "Technical", "Account", "General"] },
+    "priority": { "type": "string", "enum": ["Low", "Medium", "High"] },
+    "summary": { "type": "string", "maxLength": 300 },
+    "suggestedAction": { "type": "string", "maxLength": 500 }
+  },
+  "required": ["category", "priority", "summary", "suggestedAction"],
+  "additionalProperties": false
+}
